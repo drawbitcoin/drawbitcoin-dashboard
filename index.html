@@ -1,0 +1,1451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DRAW BITCOIN — LOCAL OS</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&display=swap');
+
+:root {
+  --gold: #F5C518; --gold2: #e6a800;
+  --cream: #f5f0e8; --cream2: #ede8df;
+  --ink: #111111; --ink2: #333333; --ink3: #666666;
+  --red: #e63312; --green: #2a9a4a; --blue: #1a6bbf;
+  --border: #111111; --border2: #cccccc;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--cream); color: var(--ink); font-family: 'Share Tech Mono', monospace; min-height: 100vh; overflow-x: hidden; }
+
+/* HEADER */
+header { display: flex; align-items: center; justify-content: space-between; padding: 14px 32px; border-bottom: 3px solid var(--ink); background: var(--cream); position: sticky; top: 0; z-index: 100; }
+.logo { display: flex; align-items: baseline; gap: 10px; }
+.logo-draw { font-family: 'VT323', monospace; font-size: 36px; background: var(--ink); color: var(--cream); padding: 0 8px 2px; letter-spacing: 3px; line-height: 1; }
+.logo-bitcoin { font-family: 'VT323', monospace; font-size: 36px; color: var(--gold); letter-spacing: 3px; line-height: 1; }
+.logo-tag { font-size: 9px; color: var(--ink3); letter-spacing: 3px; border: 1px solid var(--ink3); padding: 2px 6px; margin-left: 4px; }
+.header-right { display: flex; gap: 16px; align-items: center; }
+.btc-price { font-family: 'VT323', monospace; font-size: 22px; border: 2px solid var(--ink); padding: 4px 12px; letter-spacing: 1px; }
+.save-indicator { font-size: 9px; color: var(--green); letter-spacing: 2px; opacity: 0; transition: opacity 0.3s; }
+.save-indicator.show { opacity: 1; }
+
+/* LAYOUT */
+.os-layout { display: grid; grid-template-columns: 210px 1fr; min-height: calc(100vh - 63px); }
+
+/* SIDEBAR */
+aside { border-right: 3px solid var(--ink); padding: 20px 0; background: var(--cream2); }
+.nav-section { margin-bottom: 24px; }
+.nav-label { font-size: 8px; color: var(--ink3); padding: 0 16px 8px; letter-spacing: 4px; text-transform: uppercase; border-bottom: 1px solid var(--border2); margin-bottom: 4px; }
+.nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 16px; cursor: pointer; font-size: 12px; border-left: 3px solid transparent; letter-spacing: 1px; color: var(--ink3); transition: all 0.08s; user-select: none; }
+.nav-item:hover { background: rgba(245,197,24,0.15); border-left-color: var(--gold); color: var(--ink); }
+.nav-item.active { background: var(--gold); border-left-color: var(--ink); color: var(--ink); font-family: 'VT323', monospace; font-size: 18px; letter-spacing: 2px; }
+.nav-icon { font-size: 14px; width: 18px; text-align: center; }
+
+/* MAIN */
+main { padding: 28px 32px; overflow-y: auto; max-height: calc(100vh - 63px); }
+.page { display: none; }
+.page.active { display: block; }
+
+/* PAGE TITLE */
+.page-title { font-family: 'VT323', monospace; font-size: 48px; color: var(--ink); margin-bottom: 2px; letter-spacing: 3px; line-height: 1; }
+.page-sub { font-size: 10px; color: var(--ink3); margin-bottom: 24px; letter-spacing: 3px; text-transform: uppercase; }
+
+/* GRID */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+.grid-4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 16px; }
+
+/* CARD */
+.card { background: #fff; border: 2px solid var(--ink); padding: 16px; position: relative; box-shadow: 3px 3px 0 var(--ink); margin-bottom: 16px; }
+.card-title { font-size: 9px; color: var(--ink3); letter-spacing: 3px; margin-bottom: 12px; text-transform: uppercase; border-bottom: 1px solid var(--border2); padding-bottom: 8px; }
+.card-value { font-family: 'VT323', monospace; font-size: 48px; color: var(--ink); line-height: 1; }
+.card-value.gold { color: var(--gold2); }
+.card-value.green { color: var(--green); }
+.card-value.red { color: var(--red); }
+.card-value.sm { font-size: 28px; }
+.card-sub { font-size: 9px; color: var(--ink3); margin-top: 6px; letter-spacing: 1px; }
+
+/* PROGRESS */
+.progress-bar { height: 8px; background: var(--border2); border: 1px solid var(--ink); margin-top: 8px; }
+.progress-fill { height: 100%; background: var(--gold); transition: width 0.5s; }
+.progress-fill.green { background: var(--green); }
+
+/* KPI */
+.kpi-label { font-size: 9px; color: var(--ink3); margin-bottom: 4px; letter-spacing: 2px; }
+.kpi-val { font-family: 'VT323', monospace; font-size: 28px; color: var(--ink); }
+.kpi-change { font-size: 9px; margin-top: 2px; letter-spacing: 1px; }
+.kpi-change.up { color: var(--green); }
+.kpi-change.down { color: var(--red); }
+
+/* TABLE */
+table { width: 100%; border-collapse: collapse; font-size: 12px; }
+th { text-align: left; font-size: 8px; letter-spacing: 3px; color: var(--ink3); padding: 8px 6px 8px 0; border-bottom: 2px solid var(--ink); text-transform: uppercase; }
+td { padding: 9px 6px 9px 0; border-bottom: 1px solid var(--border2); color: var(--ink3); vertical-align: middle; }
+td:first-child { color: var(--ink); font-weight: bold; }
+tr:hover td { background: rgba(245,197,24,0.05); }
+
+/* TASK */
+.task-item { display: flex; align-items: center; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--border2); font-size: 12px; }
+.task-check { width: 16px; height: 16px; border: 2px solid var(--ink); cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 11px; background: #fff; user-select: none; }
+.task-check.done { background: var(--gold); color: var(--ink); }
+.task-label { flex: 1; color: var(--ink); }
+.task-label.done { text-decoration: line-through; color: var(--ink3); }
+.task-tag { font-size: 8px; padding: 2px 6px; border: 1px solid; letter-spacing: 2px; white-space: nowrap; }
+.task-tag.tech { color: var(--ink); border-color: var(--ink); background: var(--gold); }
+.task-tag.biz  { color: var(--ink); border-color: var(--ink); background: #b8d4f5; }
+.task-tag.art  { color: #fff; border-color: var(--red); background: var(--red); }
+.task-del { font-size: 10px; color: var(--ink3); cursor: pointer; padding: 2px 6px; border: 1px solid var(--border2); background: #fff; }
+.task-del:hover { color: var(--red); border-color: var(--red); }
+
+/* BUTTON */
+.btn { background: var(--ink); border: 2px solid var(--ink); color: var(--cream); padding: 8px 16px; font-family: 'Share Tech Mono', monospace; font-size: 11px; cursor: pointer; letter-spacing: 2px; transition: all 0.08s; }
+.btn:hover { background: var(--gold); color: var(--ink); }
+.btn-gold { background: var(--gold); border: 2px solid var(--ink); color: var(--ink); padding: 8px 16px; font-family: 'VT323', monospace; font-size: 20px; cursor: pointer; letter-spacing: 2px; box-shadow: 3px 3px 0 var(--ink); }
+.btn-gold:hover { background: var(--gold2); box-shadow: 1px 1px 0 var(--ink); transform: translate(2px,2px); }
+.btn-sm { background: var(--cream2); border: 1px solid var(--border2); color: var(--ink3); padding: 4px 10px; font-family: 'Share Tech Mono', monospace; font-size: 10px; cursor: pointer; letter-spacing: 1px; }
+.btn-sm:hover { border-color: var(--ink); color: var(--ink); }
+.btn-red { background: #fff; border: 1px solid var(--border2); color: var(--ink3); padding: 4px 8px; font-family: 'Share Tech Mono', monospace; font-size: 10px; cursor: pointer; }
+.btn-red:hover { background: var(--red); color: #fff; border-color: var(--red); }
+
+/* INPUT */
+.input { background: #fff; border: 2px solid var(--ink); color: var(--ink); padding: 8px 12px; font-family: 'Share Tech Mono', monospace; font-size: 12px; outline: none; width: 100%; }
+.input:focus { border-color: var(--gold2); }
+.select { background: var(--cream2); border: 2px solid var(--ink); color: var(--ink); padding: 8px; font-family: 'Share Tech Mono', monospace; font-size: 12px; outline: none; }
+.textarea { background: #fff; border: 2px solid var(--border2); color: var(--ink); padding: 10px 12px; font-family: 'Share Tech Mono', monospace; font-size: 11px; outline: none; width: 100%; resize: vertical; line-height: 1.6; }
+.textarea:focus { border-color: var(--gold2); }
+
+/* STATUS BADGES */
+.status { font-size: 8px; padding: 2px 8px; letter-spacing: 2px; border: 1px solid; white-space: nowrap; display: inline-block; }
+.status-prospect   { background: #fff;       color: var(--ink3); border-color: var(--border2); }
+.status-contacted  { background: #fde8c0;    color: #c06000; border-color: #e6820a; }
+.status-meeting    { background: #b8d4f5;    color: var(--blue); border-color: var(--blue); }
+.status-negotiating{ background: #e8d4f5;    color: #7b1fa2; border-color: #7b1fa2; }
+.status-closed     { background: #d4f5d4;    color: var(--green); border-color: var(--green); }
+.status-passed     { background: #f5d4d4;    color: var(--red); border-color: var(--red); }
+.status-applied    { background: var(--gold); color: var(--ink); border-color: var(--ink); }
+.status-now  { background: var(--gold); color: var(--ink); border-color: var(--ink); }
+.status-done { background: #d4f5d4; color: var(--green); border-color: var(--green); }
+.status-next { background: #fff; color: var(--ink3); border-color: var(--border2); }
+
+/* ROADMAP */
+.roadmap-item { display: grid; grid-template-columns: 90px 1fr; gap: 16px; margin-bottom: 16px; position: relative; }
+.roadmap-date { font-family: 'VT323', monospace; font-size: 18px; color: var(--ink); padding-top: 2px; letter-spacing: 1px; }
+.roadmap-content { border-left: 3px solid var(--ink); padding-left: 16px; padding-bottom: 16px; }
+.roadmap-content::before { content: '▶'; position: absolute; left: 88px; color: var(--gold2); font-size: 12px; top: 2px; }
+.roadmap-title { font-size: 13px; color: var(--ink); margin-bottom: 4px; letter-spacing: 1px; }
+.roadmap-desc { font-size: 11px; color: var(--ink3); }
+
+/* RAISE */
+.raise-track { height: 40px; background: var(--cream2); border: 2px solid var(--ink); position: relative; overflow: hidden; margin: 12px 0; box-shadow: 3px 3px 0 var(--ink); }
+.raise-fill { height: 100%; background: var(--gold); transition: width 1s ease; display: flex; align-items: center; padding-left: 12px; font-family: 'VT323', monospace; font-size: 20px; color: var(--ink); white-space: nowrap; min-width: 0; }
+
+/* NOTES */
+.note-entry { border: 2px solid var(--border2); padding: 12px; margin-bottom: 12px; background: #fff; position: relative; }
+.note-entry:hover { border-color: var(--gold2); }
+.note-date { font-size: 9px; color: var(--ink3); letter-spacing: 2px; margin-bottom: 6px; }
+.note-title { font-size: 12px; color: var(--ink); font-weight: bold; margin-bottom: 6px; }
+.note-body { font-size: 11px; color: var(--ink3); line-height: 1.6; white-space: pre-wrap; }
+
+/* PITCH */
+.pitch-content { font-size: 12px; line-height: 1.8; color: var(--ink3); white-space: pre-wrap; }
+
+/* SOCIAL TWEET */
+.tweet-card { background: var(--cream2); border: 1px solid #222; border-left: 3px solid var(--gold); padding: 14px; margin-bottom: 12px; }
+.tweet-day { font-size: 9px; color: var(--gold); letter-spacing: 2px; margin-bottom: 8px; }
+.tweet-text { font-size: 12px; color: var(--ink); line-height: 1.8; }
+
+/* MODAL */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 200; align-items: center; justify-content: center; }
+.modal-overlay.open { display: flex; }
+.modal { background: var(--cream); border: 3px solid var(--ink); box-shadow: 6px 6px 0 var(--ink); padding: 24px; width: 520px; max-width: 90vw; max-height: 80vh; overflow-y: auto; }
+.modal-title { font-family: 'VT323', monospace; font-size: 28px; letter-spacing: 2px; margin-bottom: 16px; border-bottom: 2px solid var(--ink); padding-bottom: 8px; }
+.form-row { margin-bottom: 12px; }
+.form-label { font-size: 9px; letter-spacing: 3px; color: var(--ink3); margin-bottom: 4px; display: block; }
+
+/* SCROLLBAR */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-thumb { background: var(--gold); border: 1px solid var(--ink); }
+::-webkit-scrollbar-track { background: var(--cream2); }
+
+/* CANVAS */
+#pixelCanvas { display: grid; grid-template-columns: repeat(40,1fr); gap: 0; aspect-ratio: 1; cursor: crosshair; }
+</style>
+</head>
+<body>
+
+<!-- MODAL: Add/Edit Investor -->
+<div class="modal-overlay" id="investorModal">
+  <div class="modal">
+    <div class="modal-title" id="investorModalTitle">ADD INVESTOR</div>
+    <input type="hidden" id="investorModalId">
+    <div class="form-row">
+      <label class="form-label">NAME / FUND</label>
+      <input class="input" id="iName" placeholder="Ego Death Capital">
+    </div>
+    <div class="form-row">
+      <label class="form-label">TYPE</label>
+      <select class="select" id="iType" style="width:100%">
+        <option>Angel</option><option>VC</option><option>Family Office</option>
+        <option>Accelerator</option><option>Corporate</option><option>Other</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <label class="form-label">AMOUNT (BTC)</label>
+      <input class="input" id="iAmount" placeholder="1.0" type="number" step="0.01">
+    </div>
+    <div class="form-row">
+      <label class="form-label">STATUS</label>
+      <select class="select" id="iStatus" style="width:100%">
+        <option value="prospect">PROSPECT</option>
+        <option value="contacted">CONTACTED</option>
+        <option value="meeting">MEETING SCHEDULED</option>
+        <option value="negotiating">NEGOTIATING</option>
+        <option value="applied">APPLIED</option>
+        <option value="closed">CLOSED ✓</option>
+        <option value="passed">PASSED</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <label class="form-label">CONTACT / EMAIL</label>
+      <input class="input" id="iContact" placeholder="name@fund.com">
+    </div>
+    <div class="form-row">
+      <label class="form-label">LAST CONTACT DATE</label>
+      <input class="input" id="iLastContact" type="date">
+    </div>
+    <div class="form-row">
+      <label class="form-label">NEXT ACTION</label>
+      <input class="input" id="iNextAction" placeholder="Send deck by Friday">
+    </div>
+    <div class="form-row">
+      <label class="form-label">NOTES</label>
+      <textarea class="textarea" id="iNotes" rows="3" placeholder="Meeting notes, preferences, context..."></textarea>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:16px">
+      <button class="btn-gold" onclick="saveInvestor()">SAVE</button>
+      <button class="btn" onclick="closeModal('investorModal')">CANCEL</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Add Note -->
+<div class="modal-overlay" id="noteModal">
+  <div class="modal">
+    <div class="modal-title">NEW NOTE</div>
+    <div class="form-row">
+      <label class="form-label">TITLE</label>
+      <input class="input" id="nTitle" placeholder="Meeting with Ten31 Fund">
+    </div>
+    <div class="form-row">
+      <label class="form-label">CONTENT</label>
+      <textarea class="textarea" id="nBody" rows="8" placeholder="Meeting notes, ideas, decisions..."></textarea>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:16px">
+      <button class="btn-gold" onclick="saveNote()">SAVE NOTE</button>
+      <button class="btn" onclick="closeModal('noteModal')">CANCEL</button>
+    </div>
+  </div>
+</div>
+
+<header>
+  <div class="logo">
+    <span class="logo-draw">DRAW</span>
+    <span class="logo-bitcoin">BITCOIN</span>
+    <span class="logo-tag">LOCAL OS</span>
+  </div>
+  <div class="header-right">
+    <span class="save-indicator" id="saveIndicator">✓ SAVED</span>
+    <div class="btc-price" id="btcPriceDisplay">₿ $84,200</div>
+    <div style="font-size:9px;color:var(--ink3);letter-spacing:2px;border:1px solid var(--border2);padding:4px 10px">ALL DATA LOCAL</div>
+  </div>
+</header>
+
+<div class="os-layout">
+<aside>
+  <div style="padding:16px 16px 8px;border-bottom:1px solid var(--border2);margin-bottom:8px">
+    <div style="font-size:8px;color:var(--ink3);letter-spacing:4px">NAVIGATION</div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">COMMAND</div>
+    <div class="nav-item active" onclick="showPage('dashboard',this)"><span class="nav-icon">◈</span> DASHBOARD</div>
+    <div class="nav-item" onclick="showPage('ai',this)"><span class="nav-icon">◉</span> AI ADVISOR</div>
+    <div class="nav-item" onclick="showPage('crm',this)"><span class="nav-icon">◎</span> INVESTOR CRM</div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">PRODUCT</div>
+    <div class="nav-item" onclick="showPage('tasks',this)"><span class="nav-icon">▣</span> TASKS</div>
+    <div class="nav-item" onclick="showPage('roadmap',this)"><span class="nav-icon">▶</span> ROADMAP</div>
+    <div class="nav-item" onclick="showPage('canvas',this)"><span class="nav-icon">▦</span> CANVAS SIM</div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">BUSINESS</div>
+    <div class="nav-item" onclick="showPage('fundraise',this)"><span class="nav-icon">₿</span> FUNDRAISE</div>
+    <div class="nav-item" onclick="showPage('notes',this)"><span class="nav-icon">◆</span> NOTES</div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">GROWTH</div>
+    <div class="nav-item" onclick="showPage('pitch',this)"><span class="nav-icon">◉</span> PITCH LIBRARY</div>
+    <div class="nav-item" onclick="showPage('social',this)"><span class="nav-icon">◈</span> SOCIAL QUEUE</div>
+  </div>
+  <div style="padding:16px;border-top:1px solid var(--border2);margin-top:8px">
+    <div style="font-size:9px;color:var(--ink3);letter-spacing:1px;margin-bottom:6px">BTC PRICE</div>
+    <input class="input" id="btcPriceInput" style="font-family:'VT323',monospace;font-size:20px;padding:4px 8px" placeholder="84200" onchange="updateBTCPrice()">
+  </div>
+</aside>
+
+<main>
+
+<!-- ═══════════════════════════════════════ DASHBOARD ══ -->
+<div class="page active" id="page-dashboard">
+  <div class="page-title">DASHBOARD</div>
+  <div class="page-sub">DRAW BITCOIN — MISSION CONTROL · MARCH 2026</div>
+
+  <div class="grid-4">
+    <div class="card">
+      <div class="card-title">RAISE PROGRESS</div>
+      <div class="card-value gold" id="dash-raised">0</div>
+      <div class="card-sub">BTC RAISED OF 8 BTC TARGET</div>
+      <div class="progress-bar"><div class="progress-fill" id="dash-raise-bar" style="width:0%"></div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">PROTOCOL STATUS</div>
+      <div class="card-value sm">PRE-LAUNCH</div>
+      <div class="card-sub">ORDINALS INTEGRATION: PENDING</div>
+    </div>
+    <div class="card">
+      <div class="card-title">VAULT VISION 2031</div>
+      <div class="card-value">10K</div>
+      <div class="card-sub">BTC TARGET — 0.5% SUPPLY</div>
+    </div>
+    <div class="card">
+      <div class="card-title">INVESTORS TRACKED</div>
+      <div class="card-value green" id="dash-investors">0</div>
+      <div class="card-sub">IN PIPELINE</div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">THIS WEEK'S PRIORITIES</div>
+      <div id="dashSprint"></div>
+      <div style="margin-top:12px;font-size:9px;color:var(--ink3);letter-spacing:2px">
+        → MANAGE ALL TASKS IN THE TASKS MODULE
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">KEY PROTOCOL NUMBERS</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div><div class="kpi-label">CANVAS SIZE</div><div class="kpi-val">40×40</div><div class="kpi-change">1,600 PX MAX</div></div>
+        <div><div class="kpi-label">MAX VALUE</div><div class="kpi-val">8 BTC</div><div class="kpi-change up">FULL GOLD</div></div>
+        <div><div class="kpi-label">PROTOCOL FEE</div><div class="kpi-val">10%</div><div class="kpi-change">PER INSCRIPTION</div></div>
+        <div><div class="kpi-label">FREE COLORS</div><div class="kpi-val">2</div><div class="kpi-change">BLACK / WHITE</div></div>
+        <div><div class="kpi-label">GOLD PIXEL</div><div class="kpi-val">0.005</div><div class="kpi-change">BTC / PIXEL</div></div>
+        <div><div class="kpi-label">USD VALUE (ALL GOLD)</div><div class="kpi-val sm" id="goldUSD">$673K</div><div class="kpi-change up">AT CURRENT BTC</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:0">
+    <div class="card-title">COMPETITIVE LANDSCAPE</div>
+    <table>
+      <tr><th>PROJECT</th><th>MONETARY BASE</th><th>PRICE FLOOR</th><th>BITCOIN NATIVE</th><th>CATEGORY</th></tr>
+      <tr><td>CRYPTO PUNKS</td><td>ETH (volatile)</td><td style="color:var(--red)">❌ NONE</td><td style="color:var(--red)">❌ NO</td><td>PIXEL ART PFP</td></tr>
+      <tr><td>ORDINALS</td><td>BTC</td><td style="color:var(--red)">❌ SPECULATIVE</td><td style="color:var(--green)">✅ YES</td><td>GENERIC INSCRIPTIONS</td></tr>
+      <tr><td>BORED APES</td><td>ETH (volatile)</td><td style="color:var(--red)">❌ NONE</td><td style="color:var(--red)">❌ NO</td><td>PFP COLLECTION</td></tr>
+      <tr><td style="color:var(--gold2)">DRAW BITCOIN ★</td><td style="color:var(--green)">BTC FIXED</td><td style="color:var(--green)">✅ PIXEL VALUE</td><td style="color:var(--green)">✅ YES</td><td style="color:var(--green)">MONETARY ART</td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ INVESTOR CRM ══ -->
+<div class="page" id="page-crm">
+  <div class="page-title">INVESTOR CRM</div>
+  <div class="page-sub">PIPELINE MANAGEMENT — 8 BTC SEED ROUND</div>
+
+  <div class="grid-3" style="margin-bottom:16px">
+    <div class="card" style="margin-bottom:0">
+      <div class="card-title">TOTAL COMMITTED</div>
+      <div class="card-value gold" id="crm-committed">0</div>
+      <div class="card-sub">BTC CLOSED</div>
+    </div>
+    <div class="card" style="margin-bottom:0">
+      <div class="card-title">PIPELINE VALUE</div>
+      <div class="card-value" id="crm-pipeline">0</div>
+      <div class="card-sub">BTC PROSPECT + IN-PROGRESS</div>
+    </div>
+    <div class="card" style="margin-bottom:0">
+      <div class="card-title">INVESTORS TRACKED</div>
+      <div class="card-value green" id="crm-count">0</div>
+      <div class="card-sub">IN DATABASE</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div class="card-title" style="margin-bottom:0;border:none;padding:0">INVESTOR PIPELINE</div>
+      <button class="btn-gold" onclick="openAddInvestor()">+ ADD INVESTOR</button>
+    </div>
+    <div id="crmTable">
+      <div style="color:var(--ink3);font-size:12px;padding:20px 0;text-align:center">No investors yet. Add your first prospect.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ TASKS ══ -->
+<div class="page" id="page-tasks">
+  <div class="page-title">TASKS</div>
+  <div class="page-sub">SPRINT BACKLOG — ALL DATA SAVED LOCALLY</div>
+
+  <div class="card">
+    <div class="card-title">ADD NEW TASK</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <input class="input" id="newTaskText" style="flex:1;min-width:200px" placeholder="Task description..." onkeydown="if(event.key==='Enter')addTask()">
+      <select class="select" id="newTaskTag"><option value="tech">TECH</option><option value="biz">BIZ</option><option value="art">ART</option></select>
+      <select class="select" id="newTaskPrio"><option value="high">🔴 HIGH</option><option value="med">🟡 MEDIUM</option><option value="low">⚪ LOW</option></select>
+      <button class="btn-gold" onclick="addTask()">+ ADD</button>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">🔴 HIGH PRIORITY</div>
+      <div id="tasks-high"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">🟡 MEDIUM PRIORITY</div>
+      <div id="tasks-med"></div>
+    </div>
+  </div>
+  <div class="card" style="margin-bottom:0">
+    <div class="card-title">⚪ LOW PRIORITY / BACKLOG</div>
+    <div id="tasks-low"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ ROADMAP ══ -->
+<div class="page" id="page-roadmap">
+  <div class="page-title">ROADMAP</div>
+  <div class="page-sub">DRAW BITCOIN — Q1 2026 → VAULT 10K BTC 2031</div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">PROTOCOL TIMELINE</div>
+
+      <div class="roadmap-item">
+        <div class="roadmap-date">Q1–Q4<br>2025</div>
+        <div class="roadmap-content">
+          <div class="roadmap-title">CONCEPT & PITCH DECK</div>
+          <div class="roadmap-desc">Core concept, monetary art protocol design, pitch deck v1→v2, OS startup tool, team formation</div>
+          <span class="status status-done">✓ COMPLETE</span>
+        </div>
+      </div>
+
+      <div class="roadmap-item">
+        <div class="roadmap-date">Q1 2026</div>
+        <div class="roadmap-content">
+          <div class="roadmap-title">TWITTER LAUNCH + COMMUNITY</div>
+          <div class="roadmap-desc">@drawbitcoin_org live, content strategy, first Ordinals Twitter followers, first real inscription</div>
+          <span class="status status-now">◉ NOW</span>
+        </div>
+      </div>
+
+      <div class="roadmap-item">
+        <div class="roadmap-date">Q2 2026</div>
+        <div class="roadmap-content">
+          <div class="roadmap-title">FUNDRAISE 8 BTC</div>
+          <div class="roadmap-desc">Seed round close. Bivwak / Station F accelerators. Bitcoin angels + Ten31 / Ego Death Capital.</div>
+          <span class="status status-now">◉ IN PROGRESS</span>
+        </div>
+      </div>
+
+      <div class="roadmap-item">
+        <div class="roadmap-date">Q3 2026</div>
+        <div class="roadmap-content">
+          <div class="roadmap-title">PROTOCOL v1 LAUNCH</div>
+          <div class="roadmap-desc">40×40 canvas live, Ordinals inscription flow, BTC palette, wallet connect (Unisat/Xverse), 3 curated drops</div>
+          <span class="status status-next">○ UPCOMING</span>
+        </div>
+      </div>
+
+      <div class="roadmap-item">
+        <div class="roadmap-date">Q4 2026</div>
+        <div class="roadmap-content">
+          <div class="roadmap-title">MARKETPLACE + SECONDARY</div>
+          <div class="roadmap-desc">Magic Eden & Gamma.io integration, secondary market royalties, vault share accumulation</div>
+          <span class="status status-next">○ UPCOMING</span>
+        </div>
+      </div>
+
+      <div class="roadmap-item">
+        <div class="roadmap-date">2027</div>
+        <div class="roadmap-content">
+          <div class="roadmap-title">DIGITAL SLABS + PHYSICAL</div>
+          <div class="roadmap-desc">NFC physical collectibles (OTPfuse), gallery partnerships, first press coverage, 50 BTC vault</div>
+          <span class="status status-next">○ UPCOMING</span>
+        </div>
+      </div>
+
+      <div class="roadmap-item">
+        <div class="roadmap-date">2028</div>
+        <div class="roadmap-content">
+          <div class="roadmap-title">INSTITUTION PHASE</div>
+          <div class="roadmap-desc">Draw the Louvre campaign, Series A 50 BTC, team to 8, museum partnerships begin</div>
+          <span class="status status-next">○ UPCOMING</span>
+        </div>
+      </div>
+
+      <div class="roadmap-item">
+        <div class="roadmap-date">2031</div>
+        <div class="roadmap-content">
+          <div class="roadmap-title">VAULT 10,000 BTC</div>
+          <div class="roadmap-desc">The art institution of Bitcoin. 0.5% of all BTC ever minted, locked in cultural artworks forever.</div>
+          <span class="status status-next">○ VISION</span>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card">
+        <div class="card-title">TECH STACK</div>
+        <table>
+          <tr><th>LAYER</th><th>TECH</th><th>STATUS</th></tr>
+          <tr><td>Blockchain</td><td>Bitcoin L1</td><td style="color:var(--green)">✓ DECIDED</td></tr>
+          <tr><td>Inscription</td><td>Ordinals / Taproot</td><td style="color:var(--green)">✓ DECIDED</td></tr>
+          <tr><td>Canvas</td><td>HTML5 Canvas / React</td><td style="color:var(--gold2)">⟳ IN DEV</td></tr>
+          <tr><td>Wallet</td><td>Unisat / Xverse SDK</td><td style="color:var(--gold2)">⟳ IN DEV</td></tr>
+          <tr><td>Backend</td><td>Node.js + Bitcoin RPC</td><td style="color:var(--ink3)">○ PLANNED</td></tr>
+          <tr><td>Slab NFC</td><td>OTPfuse / NFC chip</td><td style="color:var(--ink3)">○ PLANNED</td></tr>
+        </table>
+      </div>
+      <div class="card">
+        <div class="card-title">MILESTONE PROGRESS</div>
+        <div style="margin-bottom:12px"><div class="kpi-label">CONCEPT COMPLETE</div><div class="progress-bar"><div class="progress-fill green" style="width:100%"></div></div></div>
+        <div style="margin-bottom:12px"><div class="kpi-label">FUNDRAISE</div><div class="progress-bar"><div class="progress-fill" id="road-raise-bar" style="width:3%"></div></div></div>
+        <div style="margin-bottom:12px"><div class="kpi-label">PROTOCOL BUILD</div><div class="progress-bar"><div class="progress-fill" style="width:20%"></div></div></div>
+        <div style="margin-bottom:12px"><div class="kpi-label">MARKETPLACE</div><div class="progress-bar"><div class="progress-fill" style="width:0%"></div></div></div>
+        <div><div class="kpi-label">VAULT 10K BTC</div><div class="progress-bar"><div class="progress-fill" style="width:0%"></div></div></div>
+      </div>
+      <div class="card" style="margin-bottom:0">
+        <div class="card-title">USE OF FUNDS (8 BTC)</div>
+        <div class="task-item">
+          <div style="width:44px;font-family:'VT323',monospace;font-size:20px;color:var(--gold)">50%</div>
+          <div class="task-label">Protocol dev & Bitcoin infra</div>
+          <div class="task-tag tech">TECH</div>
+        </div>
+        <div class="task-item">
+          <div style="width:44px;font-family:'VT323',monospace;font-size:20px;color:var(--gold)">20%</div>
+          <div class="task-label">Marketing & community growth</div>
+          <div class="task-tag biz">BIZ</div>
+        </div>
+        <div class="task-item">
+          <div style="width:44px;font-family:'VT323',monospace;font-size:20px;color:var(--gold)">15%</div>
+          <div class="task-label">Artist partnerships & curated drops</div>
+          <div class="task-tag art">ART</div>
+        </div>
+        <div class="task-item" style="border:none">
+          <div style="width:44px;font-family:'VT323',monospace;font-size:20px;color:var(--gold)">15%</div>
+          <div class="task-label">Operations & legal</div>
+          <div class="task-tag biz">BIZ</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ CANVAS ══ -->
+<div class="page" id="page-canvas">
+  <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:20px">
+    <div style="font-family:'VT323',monospace;font-size:52px;background:var(--ink);color:var(--cream);padding:0 8px;letter-spacing:3px;line-height:1.1">DRAW</div>
+    <div style="font-family:'VT323',monospace;font-size:52px;color:var(--gold);letter-spacing:3px;line-height:1.1">BITCOIN</div>
+    <div style="margin-left:auto;display:flex;gap:8px">
+      <button class="btn" onclick="clearCanvas()">CLEAR</button>
+      <button class="btn" onclick="fillRandom()">RANDOM</button>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:200px 1fr 260px;gap:20px;align-items:start">
+    <!-- PALETTE -->
+    <div>
+      <div style="font-family:'VT323',monospace;font-size:20px;margin-bottom:12px;letter-spacing:2px">PALETTE BTC</div>
+      <div id="paletteEl" style="display:flex;flex-direction:column;gap:5px"></div>
+    </div>
+
+    <!-- CANVAS -->
+    <div style="display:flex;flex-direction:column;align-items:center">
+      <div style="border:3px solid #111;background:#fff;padding:6px;width:100%">
+        <div id="pixelCanvas"></div>
+      </div>
+    </div>
+
+    <!-- VALUE -->
+    <div>
+      <div style="font-family:'VT323',monospace;font-size:20px;margin-bottom:12px;letter-spacing:2px">ARTWORK VALUE</div>
+      <div style="border:2px solid #111;background:#fff;padding:8px 12px;font-family:'Share Tech Mono',monospace;font-size:12px;color:#111;display:flex;justify-content:space-between;border-bottom:none">
+        <span id="pxUsed">0</span><span style="color:var(--ink3)">/ 1600 PX</span>
+      </div>
+      <div style="border:2px solid #111;background:#fff;padding:8px 12px">
+        <div style="display:grid;grid-template-columns:1fr auto auto;gap:4px;font-size:9px;color:var(--ink3);letter-spacing:2px;margin-bottom:6px;border-bottom:1px solid #eee;padding-bottom:4px">
+          <span>COLOR</span><span>QTY</span><span>VALUE</span>
+        </div>
+        <div id="colorBreakdown" style="display:flex;flex-direction:column;gap:2px;font-family:'Share Tech Mono',monospace;font-size:10px;color:#111"></div>
+        <div style="border-top:1px solid #ddd;margin-top:8px;padding-top:8px;display:flex;justify-content:space-between;font-size:10px;font-family:'Share Tech Mono',monospace;color:var(--ink3)">
+          <span>PROTOCOL FEE</span><span>10%</span>
+        </div>
+      </div>
+      <div style="border:2px solid #111;border-top:none;background:#fff;padding:12px;text-align:right">
+        <div style="font-size:9px;color:var(--gold);letter-spacing:3px;font-family:'Share Tech Mono',monospace;margin-bottom:4px">TOTAL BTC</div>
+        <div style="font-family:'VT323',monospace;font-size:38px;color:#111;letter-spacing:2px" id="totalBTC">0.000000</div>
+      </div>
+      <button onclick="collectArtwork()" style="width:100%;margin-top:12px;background:var(--gold);border:3px solid #111;color:#111;padding:14px;font-family:'VT323',monospace;font-size:32px;cursor:pointer;letter-spacing:4px;box-shadow:4px 4px 0 #111;">COLLECT</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ FUNDRAISE ══ -->
+<div class="page" id="page-fundraise">
+  <div class="page-title">FUNDRAISE</div>
+  <div class="page-sub">8 BTC SEED ROUND — TRACK YOUR RAISE</div>
+
+  <div class="card">
+    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
+      <div style="font-size:10px;letter-spacing:2px;color:var(--ink3)">BTC RAISED:</div>
+      <input class="input" id="raisedBTC" style="width:120px;font-family:'VT323',monospace;font-size:24px;padding:4px 8px" placeholder="0.24" type="number" step="0.01" min="0" max="8" onchange="updateRaise()">
+      <div style="font-size:10px;letter-spacing:2px;color:var(--ink3)">/ 8 BTC TARGET</div>
+      <div style="font-size:10px;letter-spacing:2px;color:var(--ink3);margin-left:auto">USD VALUE: <span id="raisedUSD" style="color:var(--green)">$0</span></div>
+    </div>
+    <div class="raise-track">
+      <div class="raise-fill" id="raiseFill" style="width:0%">0 BTC</div>
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--ink3);margin-top:4px">
+      <span>0 BTC</span><span>2 BTC</span><span>4 BTC</span><span>6 BTC</span><span>8 BTC ★</span>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card" style="margin-bottom:0">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div class="card-title" style="margin-bottom:0;border:none;padding:0">INVESTOR PIPELINE</div>
+        <button class="btn-sm" onclick="showPage('crm',null)">OPEN CRM →</button>
+      </div>
+      <div id="fundraise-pipeline"></div>
+    </div>
+    <div class="card" style="margin-bottom:0">
+      <div class="card-title">FUNDRAISE INTELLIGENCE</div>
+      <div style="font-size:11px;line-height:2;color:var(--ink3)">
+        <div style="border-left:3px solid var(--gold);padding-left:10px;margin-bottom:10px;color:var(--ink)">
+          <strong>THE UNLOCK:</strong> One real on-chain inscription before every investor meeting. Even a free BLACK/WHITE canvas. The tx hash IS your traction slide.
+        </div>
+        <div style="margin-bottom:6px">◈ <strong>ANGEL (1 BTC):</strong> Ordinals Twitter DM, show the live demo</div>
+        <div style="margin-bottom:6px">◈ <strong>FAMILY OFFICE (3 BTC):</strong> BNP Bivwak intro, frame as "cultural reserve asset"</div>
+        <div style="margin-bottom:6px">◈ <strong>VC (4 BTC):</strong> Ten31 Fund (Berlin) or Ego Death Capital, 2-page memo first</div>
+        <div style="margin-bottom:6px">◈ <strong>ACCELERATOR:</strong> Bivwak applied ✓ — Station F next</div>
+        <div style="color:var(--green)">◈ <strong>KEY FRAME:</strong> "First person already committed. You can be second."</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ NOTES ══ -->
+<div class="page" id="page-notes">
+  <div class="page-title">NOTES</div>
+  <div class="page-sub">MEETING NOTES · IDEAS · DECISIONS — ALL SAVED LOCALLY</div>
+
+  <div style="display:flex;gap:12px;margin-bottom:16px">
+    <button class="btn-gold" onclick="openModal('noteModal')">+ NEW NOTE</button>
+    <div style="font-size:11px;color:var(--ink3);align-self:center;letter-spacing:1px" id="notes-count">0 notes</div>
+  </div>
+
+  <div id="notesContainer">
+    <div style="color:var(--ink3);font-size:12px;padding:40px 0;text-align:center;border:2px dashed var(--border2)">No notes yet. Start capturing your meetings, ideas, and decisions.</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ PITCH LIBRARY ══ -->
+<div class="page" id="page-pitch">
+  <div class="page-title">PITCH LIBRARY</div>
+  <div class="page-sub">6 READY-TO-USE PITCHES FOR EVERY AUDIENCE</div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">SELECT AUDIENCE</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <button onclick="showPitch('vc')" class="btn-sm" style="text-align:left;padding:10px 14px">◆ VENTURE CAPITALIST — 5 MIN PITCH</button>
+        <button onclick="showPitch('angel')" class="btn-sm" style="text-align:left;padding:10px 14px">◆ BITCOIN ANGEL INVESTOR</button>
+        <button onclick="showPitch('bar')" class="btn-sm" style="text-align:left;padding:10px 14px">◆ ELEVATOR PITCH — 45 SEC</button>
+        <button onclick="showPitch('accelerator')" class="btn-sm" style="text-align:left;padding:10px 14px">◆ ACCELERATOR APPLICATION</button>
+        <button onclick="showPitch('artist')" class="btn-sm" style="text-align:left;padding:10px 14px">◆ ARTIST / CREATOR COMMUNITY</button>
+        <button onclick="showPitch('press')" class="btn-sm" style="text-align:left;padding:10px 14px">◆ PRESS / JOURNALIST</button>
+      </div>
+    </div>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div class="card-title" id="pitchTitle" style="margin-bottom:0;border:none;padding:0">SELECT A PITCH →</div>
+        <button class="btn-sm" id="pitchCopyBtn" onclick="copyPitch()" style="display:none">COPY ▶</button>
+      </div>
+      <div id="pitchOutput" class="pitch-content" style="min-height:300px;color:var(--ink3)">Select an audience on the left to load the pitch.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ SOCIAL QUEUE ══ -->
+<div class="page" id="page-social">
+  <div class="page-title">SOCIAL QUEUE</div>
+  <div class="page-sub">@DRAWBITCOIN_ORG — READY-TO-POST CONTENT</div>
+
+  <div class="grid-4" style="margin-bottom:16px">
+    <div class="card" style="margin-bottom:0"><div class="card-title">ACCOUNT</div><div class="card-value sm">@DBTC</div><div class="card-sub">@DRAWBITCOIN_ORG ON X</div></div>
+    <div class="card" style="margin-bottom:0"><div class="card-title">TARGET 30 DAYS</div><div class="card-value">500</div><div class="card-sub">FOLLOWERS ORDINALS TWITTER</div></div>
+    <div class="card" style="margin-bottom:0"><div class="card-title">TARGET 90 DAYS</div><div class="card-value">5K</div><div class="card-sub">BITCOIN ART COMMUNITY</div></div>
+    <div class="card" style="margin-bottom:0"><div class="card-title">ACCOUNT CREATED</div><div class="card-value sm">MARS</div><div class="card-sub">2026 — LOUVRE LOCATION</div></div>
+  </div>
+
+  <div class="grid-2">
+    <div>
+      <div class="card" style="margin-bottom:12px">
+        <div class="card-title">BIO RECOMMANDÉE</div>
+        <div style="font-size:12px;color:var(--ink);line-height:1.8;padding:10px;background:var(--cream2);border-left:3px solid var(--gold)">
+          Paint with Bitcoin. Each pixel = satoshis. Inscribed on-chain forever.<br>
+          NEW MONEY. NEW ART. 🟧<br>
+          <span style="color:var(--ink3)">drawbitcoin.org</span>
+        </div>
+        <button onclick="copyText('Paint with Bitcoin. Each pixel = satoshis. Inscribed on-chain forever.\nNEW MONEY. NEW ART. 🟧\ndrawbitcoin.org', this)" class="btn-sm" style="margin-top:8px">COPY BIO ▶</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title">WEEK 1 STRATEGY</div>
+        <div class="task-item"><div style="width:54px;font-family:'VT323',monospace;font-size:18px;color:var(--gold2)">JOUR 1</div><div class="task-label" style="font-size:11px">Header + bio + tweet épinglé. Compléter le profil.</div></div>
+        <div class="task-item"><div style="width:54px;font-family:'VT323',monospace;font-size:18px;color:var(--gold2)">JOUR 2</div><div class="task-label" style="font-size:11px">Follow @rodarmor, @ordinalhub, @magiceden, @gammaio, @jlopp</div></div>
+        <div class="task-item"><div style="width:54px;font-family:'VT323',monospace;font-size:18px;color:var(--gold2)">JOUR 3</div><div class="task-label" style="font-size:11px">Tweet "Pourquoi pixel art ?" + répondre à 3 gros comptes</div></div>
+        <div class="task-item"><div style="width:54px;font-family:'VT323',monospace;font-size:18px;color:var(--gold2)">JOUR 4</div><div class="task-label" style="font-size:11px">Tweet tableau prix pixels (visuel gold/red/black)</div></div>
+        <div class="task-item"><div style="width:54px;font-family:'VT323',monospace;font-size:18px;color:var(--gold2)">JOUR 5</div><div class="task-label" style="font-size:11px">Tweet engagement "Quelle œuvre ferais-tu ?"</div></div>
+        <div class="task-item"><div style="width:54px;font-family:'VT323',monospace;font-size:18px;color:var(--gold2)">JOUR 6</div><div class="task-label" style="font-size:11px">Quote-tweet Magic Eden ou Gamma.io — angle Draw Bitcoin</div></div>
+        <div class="task-item" style="border:none"><div style="width:54px;font-family:'VT323',monospace;font-size:18px;color:var(--gold2)">JOUR 7</div><div class="task-label" style="font-size:11px">Tag @TimDraper + @jlopp : "New money needs new art"</div></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="tweet-card" style="border-left-color:var(--gold)">
+        <div class="tweet-day">📌 TWEET ÉPINGLÉ — LANCEMENT</div>
+        <div class="tweet-text">NEW MONEY. NEW ART.<br><br>Draw Bitcoin arrive.<br><br>Un canvas 40×40. 1 600 pixels.<br>Chaque pixel = satoshis, inscrit sur Bitcoin pour toujours.<br><br>GOLD pixel = 500 000 sats<br>RED pixel = 1 000 sats<br>WHITE/BLACK = GRATUIT<br><br>L'œuvre EST la monnaie. Inscrite sur Ordinals.<br><br>🟧 drawbitcoin.org<br>#Bitcoin #Ordinals #PixelArt</div>
+        <button onclick="copyText('NEW MONEY. NEW ART.\n\nDraw Bitcoin arrive.\n\nUn canvas 40×40. 1 600 pixels.\nChaque pixel = satoshis, inscrit sur Bitcoin pour toujours.\n\nGOLD pixel = 500 000 sats\nRED pixel = 1 000 sats\nWHITE/BLACK = GRATUIT\n\nL\'œuvre EST la monnaie. Inscrite sur Ordinals.\n\n🟧 drawbitcoin.org\n#Bitcoin #Ordinals #PixelArt', this)" class="btn-sm" style="margin-top:10px">COPIER ▶</button>
+      </div>
+
+      <div class="tweet-card" style="border-left-color:#4FC3F7">
+        <div class="tweet-day" style="color:#4FC3F7">TWEET 2 — POURQUOI PIXEL ART ?</div>
+        <div class="tweet-text">Pourquoi du pixel art sur Bitcoin ?<br><br>Parce que le pixel art est né avec l'ordinateur.<br>Bitcoin est né avec internet.<br><br>Ce sont les deux formes natives du monde digital.<br><br>Draw Bitcoin les unit. Chaque pixel a une valeur fixe en sats.<br>L'esthétique et la monnaie — une seule chose.<br><br>#Bitcoin #PixelArt #Ordinals</div>
+        <button onclick="copyText('Pourquoi du pixel art sur Bitcoin ?\n\nParce que le pixel art est né avec l\'ordinateur.\nBitcoin est né avec internet.\n\nCe sont les deux formes natives du monde digital.\n\nDraw Bitcoin les unit. Chaque pixel a une valeur fixe en sats.\nL\'esthétique et la monnaie — une seule chose.\n\n#Bitcoin #PixelArt #Ordinals', this)" class="btn-sm" style="margin-top:10px">COPIER ▶</button>
+      </div>
+
+      <div class="tweet-card" style="border-left-color:var(--green)">
+        <div class="tweet-day" style="color:var(--green)">TWEET 3 — ENGAGEMENT</div>
+        <div class="tweet-text">Si tu pouvais peindre avec du Bitcoin —<br><br>Quelle œuvre tu ferais ?<br><br>🟨 La Joconde en GOLD pixels (= 8 BTC)<br>🟥 Un autoportrait en RED pixels (quelques milliers de sats)<br>⬛ Une œuvre entière en BLACK/WHITE (= GRATUIT)<br><br>Draw Bitcoin arrive. Choisis ton camp.<br>#Bitcoin #CryptoArt</div>
+        <button onclick="copyText('Si tu pouvais peindre avec du Bitcoin —\n\nQuelle œuvre tu ferais ?\n\n🟨 La Joconde en GOLD pixels (= 8 BTC)\n🟥 Un autoportrait en RED pixels (quelques milliers de sats)\n⬛ Une œuvre entière en BLACK/WHITE (= GRATUIT)\n\nDraw Bitcoin arrive. Choisis ton camp.\n#Bitcoin #CryptoArt', this)" class="btn-sm" style="margin-top:10px">COPIER ▶</button>
+      </div>
+
+      <div class="tweet-card" style="border-left-color:#FFA726">
+        <div class="tweet-day" style="color:#FFA726">TWEET 4 — TEASE ARTIST DROP</div>
+        <div class="tweet-text">Première collection curatée — bientôt.<br><br>Un artiste pixel. Un canvas 40×40. Une valeur fixe en BTC.<br>Inscrit sur Bitcoin. Pour toujours.<br><br>L'art ne se vend pas. Il s'inscrit.<br><br>🟧 Follow @drawbitcoin_org pour être le premier informé.<br>#Ordinals #BitcoinArt #PixelArt</div>
+        <button onclick="copyText('Première collection curatée — bientôt.\n\nUn artiste pixel. Un canvas 40×40. Une valeur fixe en BTC.\nInscrit sur Bitcoin. Pour toujours.\n\nL\'art ne se vend pas. Il s\'inscrit.\n\n🟧 Follow @drawbitcoin_org pour être le premier informé.\n#Ordinals #BitcoinArt #PixelArt', this)" class="btn-sm" style="margin-top:10px">COPIER ▶</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="page" id="page-ai">
+  <div class="page-title">AI ADVISOR</div>
+  <div class="page-sub">AUTONOMOUS STARTUP INTELLIGENCE — ASK ANYTHING ABOUT DRAW BITCOIN</div>
+
+  <div class="grid-2">
+    <div style="background:#fff;border:2px solid var(--ink);box-shadow:3px 3px 0 var(--ink);display:flex;flex-direction:column;height:520px">
+      <div style="padding:10px 16px;border-bottom:2px solid var(--ink);background:var(--gold);font-family:'DRAWBTC','VT323',monospace;font-size:20px;letter-spacing:2px;display:flex;align-items:center;gap:8px">
+        <div style="width:8px;height:8px;background:var(--green);border-radius:50%;border:1px solid var(--ink);animation:pulse 1.5s infinite"></div>
+        DRAW BITCOIN AI ADVISOR — ONLINE
+      </div>
+      <div id="aiMessages" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;background:var(--cream);scrollbar-width:thin">
+        <div style="padding:10px 14px;font-size:12px;line-height:1.6;background:#fff;border:1px solid var(--ink);border-left:4px solid var(--gold)">
+          <div style="font-size:8px;color:var(--ink3);margin-bottom:4px;letter-spacing:3px">SYSTEM</div>
+          Bonjour. Je suis votre conseiller IA pour Draw Bitcoin. Stratégie, fundraising, product, pitchs investors, roadmap — posez toutes vos questions.
+        </div>
+      </div>
+      <div style="display:flex;border-top:2px solid var(--ink)">
+        <input id="aiInput" style="flex:1;background:var(--cream);border:none;padding:12px 16px;color:var(--ink);font-family:'Share Tech Mono',monospace;font-size:12px;outline:none" placeholder="Ex: Comment pitcher Draw Bitcoin à un VC ?" onkeydown="if(event.key==='Enter')sendAI()">
+        <button onclick="sendAI()" style="background:var(--gold);border:none;border-left:2px solid var(--ink);padding:12px 20px;color:var(--ink);font-family:'DRAWBTC','VT323',monospace;font-size:20px;cursor:pointer;letter-spacing:2px">SEND ▶</button>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div class="card">
+        <div class="card-title">QUICK PROMPTS</div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <button onclick="quickPrompt('Génère un elevator pitch pour un VC Bitcoin en 3 phrases')" style="background:#fff;border:2px solid var(--ink);color:var(--ink);padding:10px 14px;font-family:'Share Tech Mono',monospace;font-size:11px;text-align:left;cursor:pointer;box-shadow:2px 2px 0 var(--ink)">▶ Pitch VC Bitcoin (3 phrases)</button>
+          <button onclick="quickPrompt('Quels sont les 5 risques principaux de Draw Bitcoin et comment les mitiger ?')" style="background:#fff;border:2px solid var(--ink);color:var(--ink);padding:10px 14px;font-family:'Share Tech Mono',monospace;font-size:11px;text-align:left;cursor:pointer;box-shadow:2px 2px 0 var(--ink)">▶ Analyse risques startup</button>
+          <button onclick="quickPrompt('Propose une stratégie de lancement pour les 90 premiers jours après la levée')" style="background:#fff;border:2px solid var(--ink);color:var(--ink);padding:10px 14px;font-family:'Share Tech Mono',monospace;font-size:11px;text-align:left;cursor:pointer;box-shadow:2px 2px 0 var(--ink)">▶ Plan 90 jours post-levée</button>
+          <button onclick="quickPrompt('Comment valoriser Draw Bitcoin pour une levée de seed ?')" style="background:#fff;border:2px solid var(--ink);color:var(--ink);padding:10px 14px;font-family:'Share Tech Mono',monospace;font-size:11px;text-align:left;cursor:pointer;box-shadow:2px 2px 0 var(--ink)">▶ Valorisation seed round</button>
+          <button onclick="quickPrompt('Rédige un email froid pour contacter Ten31 Fund à Berlin')" style="background:#fff;border:2px solid var(--ink);color:var(--ink);padding:10px 14px;font-family:'Share Tech Mono',monospace;font-size:11px;text-align:left;cursor:pointer;box-shadow:2px 2px 0 var(--ink)">▶ Cold email Ten31 Fund Berlin</button>
+          <button onclick="quickPrompt('Quelle architecture technique pour inscrire des artworks via Ordinals ?')" style="background:#fff;border:2px solid var(--ink);color:var(--ink);padding:10px 14px;font-family:'Share Tech Mono',monospace;font-size:11px;text-align:left;cursor:pointer;box-shadow:2px 2px 0 var(--ink)">▶ Architecture Ordinals technique</button>
+          <button onclick="quickPrompt('Écris un tweet pour annoncer la transparence du vault Bitcoin de Draw Bitcoin, adresse: bc1p0s4jpul3nevglf2qr5ev4cddwhr85au3aharmkrfgs67w90u5vcqtx4krn')" style="background:var(--gold);border:2px solid var(--ink);color:var(--ink);padding:10px 14px;font-family:'Share Tech Mono',monospace;font-size:11px;text-align:left;cursor:pointer;box-shadow:2px 2px 0 var(--ink)">▶ Tweet Vault Transparency 🟧</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">AI CONTEXT</div>
+        <div style="font-size:11px;color:var(--ink3);line-height:2">
+          ◈ Projet: Draw Bitcoin<br>
+          ◈ Fondateurs: Antonin Garrigue + Bojan Teofilovic<br>
+          ◈ Levée: 8 BTC (ou €)<br>
+          ◈ Tech: Ordinals / Bitcoin L1<br>
+          ◈ Canvas: 40×40px, pixel = satoshis<br>
+          ◈ Vision: Vault 10K BTC en 2031<br>
+          ◈ Vault: bc1p0s4j…u5vcq (Taproot)<br>
+          ◈ Business: Vault share, marketplace, drops, slabs
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</main>
+</div>
+
+<script>
+// ─────────────────────────────────────────────────────────────────────────────
+// STATE — All persisted to localStorage
+// ─────────────────────────────────────────────────────────────────────────────
+const KEYS = { investors: 'db_investors', tasks: 'db_tasks', notes: 'db_notes', raised: 'db_raised', btcPrice: 'db_btcprice' };
+
+function load(key, def) { try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : def; } catch { return def; } }
+function save(key, val) { localStorage.setItem(key, JSON.stringify(val)); showSaved(); }
+
+let state = {
+  investors: load(KEYS.investors, [
+    { id: 1, name: 'Bivwak! BNP Paribas', type: 'Accelerator', amount: 0, status: 'applied', contact: '', lastContact: '', nextAction: 'Await result Q2 2026', notes: 'Applied Q1 2026' },
+    { id: 2, name: 'Bitcoin Angel (target)', type: 'Angel', amount: 1, status: 'prospect', contact: '', lastContact: '', nextAction: 'Reach via Ordinals Twitter DM', notes: '' },
+    { id: 3, name: 'Family Office BTC', type: 'Family Office', amount: 3, status: 'prospect', contact: '', lastContact: '', nextAction: 'Find via Bivwak network', notes: '' },
+    { id: 4, name: 'Ten31 Fund', type: 'VC', amount: 4, status: 'prospect', contact: '', lastContact: '', nextAction: 'Send 2-page memo + deck', notes: 'Bitcoin-native VC Berlin' },
+  ]),
+  tasks: load(KEYS.tasks, [
+    { id: 1, text: 'Build Ordinals inscription prototype', tag: 'tech', prio: 'high', done: false },
+    { id: 2, text: 'Deploy drawbitcoin.org landing page', tag: 'tech', prio: 'high', done: false },
+    { id: 3, text: 'Close first investor meeting', tag: 'biz', prio: 'high', done: false },
+    { id: 4, text: 'Poster le tweet de lancement épinglé', tag: 'biz', prio: 'high', done: false },
+    { id: 5, text: 'Reach 5 Bitcoin angels via Twitter DM', tag: 'biz', prio: 'high', done: false },
+    { id: 6, text: 'Apply Bivwak BNP Paribas', tag: 'biz', prio: 'high', done: true },
+    { id: 7, text: 'Créer @drawbitcoin_org sur X/Twitter', tag: 'biz', prio: 'high', done: true },
+    { id: 8, text: 'Finalize pitch deck v2', tag: 'biz', prio: 'high', done: true },
+    { id: 9, text: 'Design pixel-to-BTC mapping UI', tag: 'art', prio: 'med', done: false },
+    { id: 10, text: 'Write Ordinals technical spec', tag: 'tech', prio: 'med', done: false },
+    { id: 11, text: 'Contact 10 Bitcoin angel investors', tag: 'biz', prio: 'med', done: false },
+    { id: 12, text: 'Exécuter stratégie Twitter — 7 jours', tag: 'biz', prio: 'med', done: false },
+    { id: 13, text: 'Prototype Digital Slab mockup', tag: 'art', prio: 'med', done: false },
+    { id: 14, text: 'Apply Station F accelerator', tag: 'biz', prio: 'low', done: false },
+    { id: 15, text: 'Research Ego Death Capital contact', tag: 'biz', prio: 'low', done: false },
+  ]),
+  notes: load(KEYS.notes, []),
+  raised: load(KEYS.raised, 0.24),
+  btcPrice: load(KEYS.btcPrice, 84200),
+};
+
+let nextId = Math.max(...state.investors.map(i=>i.id), ...state.tasks.map(t=>t.id), 100) + 1;
+
+function uid() { return nextId++; }
+
+function showSaved() {
+  const el = document.getElementById('saveIndicator');
+  el.classList.add('show');
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.remove('show'), 1500);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// NAVIGATION
+// ─────────────────────────────────────────────────────────────────────────────
+function showPage(id, navEl) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  if (navEl) navEl.classList.add('active');
+  else {
+    document.querySelectorAll('.nav-item').forEach(n => {
+      if (n.getAttribute('onclick') && n.getAttribute('onclick').includes("'"+id+"'")) n.classList.add('active');
+    });
+  }
+  // refresh views when navigating
+  if (id === 'crm') renderCRM();
+  if (id === 'tasks') renderTasks();
+  if (id === 'dashboard') renderDashboard();
+  if (id === 'fundraise') renderFundraise();
+  if (id === 'notes') renderNotes();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// BTC PRICE
+// ─────────────────────────────────────────────────────────────────────────────
+function updateBTCPrice() {
+  const v = parseFloat(document.getElementById('btcPriceInput').value) || 84200;
+  state.btcPrice = v;
+  save(KEYS.btcPrice, v);
+  document.getElementById('btcPriceDisplay').textContent = '₿ $' + v.toLocaleString();
+  document.getElementById('goldUSD').textContent = '$' + Math.round(8 * v).toLocaleString();
+  renderDashboard();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DASHBOARD
+// ─────────────────────────────────────────────────────────────────────────────
+function renderDashboard() {
+  const raised = state.raised;
+  const pct = Math.min((raised / 8) * 100, 100);
+  document.getElementById('dash-raised').textContent = raised.toFixed(2);
+  document.getElementById('dash-raise-bar').style.width = pct + '%';
+  document.getElementById('dash-investors').textContent = state.investors.length;
+  document.getElementById('goldUSD').textContent = '$' + Math.round(8 * state.btcPrice).toLocaleString();
+
+  // Sprint tasks (high prio, not done)
+  const sprint = state.tasks.filter(t => t.prio === 'high').slice(0, 6);
+  document.getElementById('dashSprint').innerHTML = sprint.map(t => `
+    <div class="task-item">
+      <div class="task-check ${t.done?'done':''}" onclick="toggleTaskById(${t.id})">${t.done?'✓':''}</div>
+      <div class="task-label ${t.done?'done':''}">${t.text}</div>
+      <div class="task-tag ${t.tag}">${t.tag.toUpperCase()}</div>
+    </div>
+  `).join('');
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// INVESTOR CRM
+// ─────────────────────────────────────────────────────────────────────────────
+const statusLabels = { prospect:'PROSPECT', contacted:'CONTACTED', meeting:'MEETING', negotiating:'NEGOTIATING', applied:'APPLIED', closed:'CLOSED ✓', passed:'PASSED' };
+
+function renderCRM() {
+  const closed = state.investors.filter(i=>i.status==='closed').reduce((s,i)=>s+i.amount,0);
+  const pipeline = state.investors.filter(i=>!['closed','passed'].includes(i.status)).reduce((s,i)=>s+i.amount,0);
+  document.getElementById('crm-committed').textContent = closed.toFixed(2);
+  document.getElementById('crm-pipeline').textContent = pipeline.toFixed(2);
+  document.getElementById('crm-count').textContent = state.investors.length;
+
+  if (!state.investors.length) {
+    document.getElementById('crmTable').innerHTML = '<div style="color:var(--ink3);font-size:12px;padding:20px 0;text-align:center">No investors yet.</div>';
+    return;
+  }
+
+  document.getElementById('crmTable').innerHTML = `
+    <table>
+      <tr>
+        <th>NAME</th><th>TYPE</th><th>BTC</th><th>STATUS</th>
+        <th>NEXT ACTION</th><th>LAST CONTACT</th><th></th>
+      </tr>
+      ${state.investors.map(i => `
+        <tr>
+          <td>${i.name}</td>
+          <td style="font-size:10px">${i.type}</td>
+          <td style="font-family:'VT323',monospace;font-size:18px">${i.amount||'TBD'}</td>
+          <td><span class="status status-${i.status}">${statusLabels[i.status]||i.status}</span></td>
+          <td style="font-size:10px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${i.nextAction||'—'}</td>
+          <td style="font-size:10px">${i.lastContact||'—'}</td>
+          <td style="display:flex;gap:4px">
+            <button class="btn-sm" onclick="openEditInvestor(${i.id})">EDIT</button>
+            <button class="btn-red" onclick="deleteInvestor(${i.id})">✕</button>
+          </td>
+        </tr>
+      `).join('')}
+    </table>
+  `;
+}
+
+function openAddInvestor() {
+  document.getElementById('investorModalTitle').textContent = 'ADD INVESTOR';
+  document.getElementById('investorModalId').value = '';
+  ['iName','iContact','iLastContact','iNextAction','iNotes'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('iAmount').value = '';
+  document.getElementById('iType').value = 'Angel';
+  document.getElementById('iStatus').value = 'prospect';
+  openModal('investorModal');
+}
+
+function openEditInvestor(id) {
+  const inv = state.investors.find(i=>i.id===id);
+  if (!inv) return;
+  document.getElementById('investorModalTitle').textContent = 'EDIT INVESTOR';
+  document.getElementById('investorModalId').value = id;
+  document.getElementById('iName').value = inv.name;
+  document.getElementById('iType').value = inv.type;
+  document.getElementById('iAmount').value = inv.amount || '';
+  document.getElementById('iStatus').value = inv.status;
+  document.getElementById('iContact').value = inv.contact || '';
+  document.getElementById('iLastContact').value = inv.lastContact || '';
+  document.getElementById('iNextAction').value = inv.nextAction || '';
+  document.getElementById('iNotes').value = inv.notes || '';
+  openModal('investorModal');
+}
+
+function saveInvestor() {
+  const id = document.getElementById('investorModalId').value;
+  const inv = {
+    name: document.getElementById('iName').value.trim(),
+    type: document.getElementById('iType').value,
+    amount: parseFloat(document.getElementById('iAmount').value) || 0,
+    status: document.getElementById('iStatus').value,
+    contact: document.getElementById('iContact').value.trim(),
+    lastContact: document.getElementById('iLastContact').value,
+    nextAction: document.getElementById('iNextAction').value.trim(),
+    notes: document.getElementById('iNotes').value.trim(),
+  };
+  if (!inv.name) { alert('Name is required.'); return; }
+  if (id) {
+    const idx = state.investors.findIndex(i=>i.id===parseInt(id));
+    if (idx >= 0) state.investors[idx] = { ...state.investors[idx], ...inv };
+  } else {
+    state.investors.push({ id: uid(), ...inv });
+  }
+  save(KEYS.investors, state.investors);
+  closeModal('investorModal');
+  renderCRM();
+  renderDashboard();
+  renderFundraise();
+}
+
+function deleteInvestor(id) {
+  if (!confirm('Remove this investor from the pipeline?')) return;
+  state.investors = state.investors.filter(i=>i.id!==id);
+  save(KEYS.investors, state.investors);
+  renderCRM();
+  renderDashboard();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TASKS
+// ─────────────────────────────────────────────────────────────────────────────
+function renderTasks() {
+  ['high','med','low'].forEach(prio => {
+    const el = document.getElementById('tasks-'+prio);
+    const filtered = state.tasks.filter(t=>t.prio===prio);
+    if (!filtered.length) {
+      el.innerHTML = '<div style="color:var(--ink3);font-size:11px;padding:10px 0">No tasks in this priority.</div>';
+      return;
+    }
+    el.innerHTML = filtered.map(t => `
+      <div class="task-item">
+        <div class="task-check ${t.done?'done':''}" onclick="toggleTaskById(${t.id})">${t.done?'✓':''}</div>
+        <div class="task-label ${t.done?'done':''}">${t.text}</div>
+        <div class="task-tag ${t.tag}">${t.tag.toUpperCase()}</div>
+        <button class="task-del" onclick="deleteTask(${t.id})">✕</button>
+      </div>
+    `).join('');
+  });
+}
+
+function addTask() {
+  const text = document.getElementById('newTaskText').value.trim();
+  if (!text) return;
+  const tag = document.getElementById('newTaskTag').value;
+  const prio = document.getElementById('newTaskPrio').value;
+  state.tasks.push({ id: uid(), text, tag, prio, done: false });
+  document.getElementById('newTaskText').value = '';
+  save(KEYS.tasks, state.tasks);
+  renderTasks();
+  renderDashboard();
+}
+
+function toggleTaskById(id) {
+  const t = state.tasks.find(t=>t.id===id);
+  if (t) { t.done = !t.done; save(KEYS.tasks, state.tasks); renderTasks(); renderDashboard(); }
+}
+
+function deleteTask(id) {
+  state.tasks = state.tasks.filter(t=>t.id!==id);
+  save(KEYS.tasks, state.tasks);
+  renderTasks();
+  renderDashboard();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FUNDRAISE
+// ─────────────────────────────────────────────────────────────────────────────
+function updateRaise() {
+  const v = parseFloat(document.getElementById('raisedBTC').value) || 0;
+  state.raised = Math.min(v, 8);
+  save(KEYS.raised, state.raised);
+  renderFundraise();
+  renderDashboard();
+  const bar = document.getElementById('road-raise-bar');
+  if (bar) bar.style.width = (state.raised/8*100)+'%';
+}
+
+function renderFundraise() {
+  const pct = Math.min((state.raised / 8) * 100, 100);
+  const fill = document.getElementById('raiseFill');
+  if (fill) { fill.style.width = pct + '%'; fill.textContent = state.raised.toFixed(2) + ' BTC'; }
+  const usd = document.getElementById('raisedUSD');
+  if (usd) usd.textContent = '$' + Math.round(state.raised * state.btcPrice).toLocaleString();
+  const inp = document.getElementById('raisedBTC');
+  if (inp && inp !== document.activeElement) inp.value = state.raised;
+
+  // Pipeline in fundraise
+  const el = document.getElementById('fundraise-pipeline');
+  if (!el) return;
+  if (!state.investors.length) { el.innerHTML = '<div style="color:var(--ink3);font-size:12px">No investors tracked yet.</div>'; return; }
+  el.innerHTML = `<table>
+    <tr><th>NAME</th><th>TYPE</th><th>BTC</th><th>STATUS</th></tr>
+    ${state.investors.map(i=>`
+      <tr>
+        <td>${i.name}</td>
+        <td style="font-size:10px">${i.type}</td>
+        <td style="font-family:'VT323',monospace;font-size:18px">${i.amount||'TBD'}</td>
+        <td><span class="status status-${i.status}">${statusLabels[i.status]||i.status}</span></td>
+      </tr>
+    `).join('')}
+  </table>`;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// NOTES
+// ─────────────────────────────────────────────────────────────────────────────
+function saveNote() {
+  const title = document.getElementById('nTitle').value.trim();
+  const body = document.getElementById('nBody').value.trim();
+  if (!title && !body) return;
+  state.notes.unshift({ id: uid(), title: title || 'Untitled', body, date: new Date().toLocaleDateString('fr-FR', {day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) });
+  save(KEYS.notes, state.notes);
+  closeModal('noteModal');
+  renderNotes();
+}
+
+function deleteNote(id) {
+  state.notes = state.notes.filter(n=>n.id!==id);
+  save(KEYS.notes, state.notes);
+  renderNotes();
+}
+
+function renderNotes() {
+  document.getElementById('notes-count').textContent = state.notes.length + ' note' + (state.notes.length !== 1 ? 's' : '');
+  if (!state.notes.length) {
+    document.getElementById('notesContainer').innerHTML = '<div style="color:var(--ink3);font-size:12px;padding:40px 0;text-align:center;border:2px dashed var(--border2)">No notes yet. Start capturing your meetings, ideas, and decisions.</div>';
+    return;
+  }
+  document.getElementById('notesContainer').innerHTML = state.notes.map(n => `
+    <div class="note-entry">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <div class="note-title">${n.title}</div>
+        <div style="display:flex;gap:6px;align-items:center">
+          <div class="note-date">${n.date}</div>
+          <button class="btn-red" onclick="deleteNote(${n.id})">✕</button>
+        </div>
+      </div>
+      <div class="note-body">${n.body}</div>
+    </div>
+  `).join('');
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PITCH LIBRARY
+// ─────────────────────────────────────────────────────────────────────────────
+const pitches = {
+  vc: { title: 'VC PITCH — 5 MIN', text: `PROBLEM
+Digital art has no monetary base. NFTs are pure speculation — no reserve, no price floor. Bitcoin secures value but has no cultural form.
+
+SOLUTION
+Draw Bitcoin is the first monetary art protocol. Users paint on a 40×40 pixel canvas where each color has a fixed Bitcoin value. A 1,600-pixel artwork in Gold costs 8 BTC. The artwork IS the money — inscribed on Bitcoin via Ordinals.
+
+TRACTION
+Protocol designed. Pitch deck complete. Bivwak application submitted. Seed round open.
+
+BUSINESS MODEL
+10% protocol fee on all inscriptions + marketplace royalties + curated artist drops + Digital Slab physical products.
+
+VISION
+By 2031, our vault holds 10,000 BTC — making Draw Bitcoin the art institution of the Bitcoin standard. 0.5% of all BTC ever minted, locked in cultural assets forever.
+
+THE ASK
+8 BTC seed round to build and launch the protocol.` },
+
+  angel: { title: 'BITCOIN ANGEL PITCH', text: `You believe in Bitcoin as the hardest money ever created. So do we.
+
+But Bitcoin has no culture. No image. No art.
+
+Draw Bitcoin fixes this. We've built a protocol where pixel art IS Bitcoin. Every pixel you paint has a fixed sat value — inscribed on-chain via Ordinals. You don't buy art with Bitcoin. You compose art FROM Bitcoin.
+
+Our vault vision: 10,000 BTC locked in artworks by 2031. That's 0.5% of total supply held as cultural capital.
+
+We're raising 8 BTC. For a Bitcoiner, this is the most Bitcoin-native investment in the art world.` },
+
+  bar: { title: 'ELEVATOR PITCH — 45 SEC', text: `"On a inventé la peinture avec du Bitcoin."
+
+Le problème: l'art digital n'a aucune base monétaire. Les NFTs s'effondrent parce que c'est de la spéculation pure.
+
+Notre solution: chaque pixel que tu peins a une valeur fixe en satoshis. Tu fais une image — et l'œuvre est inscrite sur Bitcoin. C'est pas un NFT. C'est de l'argent avec une forme culturelle.
+
+On lève 8 BTC pour lancer le protocole. La vision: 10 000 BTC en vault d'ici 2031.
+
+[prendre une gorgée de bière]` },
+
+  accelerator: { title: 'ACCELERATOR APPLICATION', text: `PROJECT: Draw Bitcoin
+CATEGORY: Fintech / Bitcoin Protocol / Art
+
+THE PROBLEM
+Digital art markets are entirely speculative. NFTs have no reserve, no price floor, no monetary base. Meanwhile, Bitcoin — the hardest money ever created — has no cultural form, no image, no art.
+
+THE SOLUTION
+Draw Bitcoin is a protocol where monetary value and artistic creation are one. Users paint on a 40×40 pixel canvas where each color is denominated in BTC satoshis. The resulting artwork is inscribed on the Bitcoin blockchain via Ordinals. The art IS the money.
+
+INNOVATION
+First Bitcoin-native cultural asset protocol with fixed-value pixels. No speculation. Price floor guaranteed by protocol.
+
+TEAM
+Antonin Garrigue (Founder) + Bojan Teofilovic (CTO)
+
+TRACTION
+Protocol designed. Pitch deck v2 complete. Fundraise in progress.
+
+THE ASK
+8 BTC (or € equivalent) + acceleration support.` },
+
+  artist: { title: 'ARTIST COMMUNITY PITCH', text: `Imagine your art literally storing value.
+
+Not priced in dollars that inflate. Not an NFT on a chain that might not exist in 10 years. Bitcoin.
+
+With Draw Bitcoin, every pixel you place has a real monetary value in satoshis — the smallest unit of Bitcoin. A painting composed in Gold pixels is worth 8 BTC. In red pixels? Just a few sats. Your composition choices are financial choices.
+
+When you "Collect" your artwork, it's inscribed permanently on Bitcoin. The painting and its monetary value are the same object — forever.
+
+We're building the artist community of the Bitcoin era. Join us.` },
+
+  press: { title: 'PRESS / JOURNALIST', text: `FOR IMMEDIATE INTEREST
+
+A French startup has invented a new category: "monetary art."
+
+Draw Bitcoin is a protocol where paintings are composed in Bitcoin. Each pixel in a 40×40 canvas has a fixed BTC value — Gold pixels cost 0.005 BTC, Red pixels 0.00001 BTC, White and Black are free. The resulting pixel artwork is inscribed on the Bitcoin blockchain, making the image and its monetary value identical.
+
+Founded by Antonin Garrigue and Bojan Teofilovic, the project challenges both the NFT market ("art has no money") and Bitcoin itself ("money has no art").
+
+Their 2031 vision: a vault holding 10,000 BTC locked in artworks — 0.5% of all Bitcoin ever minted, preserved as cultural heritage.
+
+Currently raising 8 BTC to launch the protocol.` }
+};
+
+let currentPitch = null;
+
+function showPitch(key) {
+  const p = pitches[key];
+  currentPitch = p.text;
+  document.getElementById('pitchTitle').textContent = p.title;
+  document.getElementById('pitchOutput').innerHTML = p.text.split('\n').map(l =>
+    l.trim() ? `<span>${l}</span><br>` : '<br>'
+  ).join('');
+  document.getElementById('pitchCopyBtn').style.display = 'inline-block';
+}
+
+function copyPitch() {
+  if (!currentPitch) return;
+  navigator.clipboard.writeText(currentPitch).then(() => {
+    const btn = document.getElementById('pitchCopyBtn');
+    const orig = btn.textContent;
+    btn.textContent = '✓ COPIED!';
+    btn.style.background = 'var(--green)';
+    btn.style.color = '#fff';
+    setTimeout(() => { btn.textContent = orig; btn.style.background = ''; btn.style.color = ''; }, 2000);
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// COPY HELPER
+// ─────────────────────────────────────────────────────────────────────────────
+function copyText(text, btn) {
+  navigator.clipboard.writeText(text).then(() => {
+    const orig = btn.textContent;
+    btn.textContent = '✓ COPIÉ !';
+    const origBg = btn.style.background;
+    btn.style.background = 'var(--green)';
+    btn.style.color = '#fff';
+    setTimeout(() => { btn.textContent = orig; btn.style.background = origBg; btn.style.color = ''; }, 2000);
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MODAL
+// ─────────────────────────────────────────────────────────────────────────────
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CANVAS SIMULATOR
+// ─────────────────────────────────────────────────────────────────────────────
+const COLORS = [
+  { name:'GOLD',   hex:'#F5C518', btc:0.00500 },
+  { name:'SILVER', hex:'#C0C0C0', btc:0.00050 },
+  { name:'BRONZE', hex:'#CD7F32', btc:0.00010 },
+  { name:'VIOLET', hex:'#FF69B4', btc:0.00005 },
+  { name:'BLUE',   hex:'#4FC3F7', btc:0.00004 },
+  { name:'GREEN',  hex:'#00C853', btc:0.00003 },
+  { name:'ORANGE', hex:'#FFA726', btc:0.00002 },
+  { name:'RED',    hex:'#E63312', btc:0.00001 },
+  { name:'WHITE',  hex:'#FFFFFF', btc:0 },
+  { name:'BLACK',  hex:'#111111', btc:0 },
+];
+let selectedColor = COLORS[8];
+let pixelData = new Array(1600).fill(null);
+let isPainting = false;
+
+function initPalette() {
+  const pal = document.getElementById('paletteEl');
+  if (!pal) return;
+  pal.innerHTML = COLORS.map((c, i) => `
+    <div onclick="selectPaletteColor(${i})" id="pcol${i}" style="display:flex;align-items:center;gap:8px;padding:5px 10px;cursor:pointer;border:2px solid ${i===8?'#111':'#ccc'};background:#fff;font-family:'Share Tech Mono',monospace;font-size:10px;color:#111;letter-spacing:1px">
+      <span style="flex:1">${c.name}</span>
+      <span style="color:#666;font-size:9px">${c.btc===0?'FREE':c.btc.toFixed(5)}</span>
+      <div style="width:16px;height:16px;background:${c.hex};border:1px solid #999;border-radius:50%;flex-shrink:0"></div>
+    </div>
+  `).join('');
+}
+
+function selectPaletteColor(i) {
+  selectedColor = COLORS[i];
+  document.querySelectorAll('[id^="pcol"]').forEach(el => { el.style.borderColor='#ccc'; el.style.background='#fff'; });
+  const el = document.getElementById('pcol'+i);
+  if (el) { el.style.borderColor = '#111'; el.style.background = '#f5f0e8'; }
+}
+
+function initCanvas() {
+  const canvas = document.getElementById('pixelCanvas');
+  if (!canvas) return;
+  canvas.innerHTML = '';
+  for (let i = 0; i < 1600; i++) {
+    const px = document.createElement('div');
+    px.style.cssText = 'background:#fff;border:0.3px solid rgba(0,0,0,0.04);aspect-ratio:1';
+    px.addEventListener('mousedown', e => { isPainting = true; paintPx(i, px); e.preventDefault(); });
+    px.addEventListener('mouseenter', () => { if(isPainting) paintPx(i, px); });
+    canvas.appendChild(px);
+  }
+  document.addEventListener('mouseup', () => isPainting = false);
+}
+
+function paintPx(i, el) {
+  pixelData[i] = selectedColor;
+  el.style.background = selectedColor.hex;
+  updateCanvasValue();
+}
+
+function updateCanvasValue() {
+  const counts = {};
+  let total = 0;
+  COLORS.forEach(c => counts[c.name] = { qty:0, val:0 });
+  pixelData.forEach(p => { if(p) { counts[p.name].qty++; counts[p.name].val += p.btc; total += p.btc; }});
+  const used = pixelData.filter(Boolean).length;
+  document.getElementById('pxUsed').textContent = used;
+  document.getElementById('colorBreakdown').innerHTML = COLORS.map(c => `
+    <div style="display:grid;grid-template-columns:1fr auto auto;gap:4px;padding:2px 0;border-bottom:1px solid #f0f0f0">
+      <span style="color:#111">${c.name}</span>
+      <span style="color:#666;text-align:right;min-width:24px">${counts[c.name].qty}</span>
+      <span style="color:#111;text-align:right;min-width:90px">${counts[c.name].val===0&&c.btc===0?'FREE':counts[c.name].val.toFixed(5)+' BTC'}</span>
+    </div>
+  `).join('');
+  document.getElementById('totalBTC').textContent = total.toFixed(6);
+}
+
+function clearCanvas() {
+  pixelData = new Array(1600).fill(null);
+  initCanvas();
+  updateCanvasValue();
+}
+
+function fillRandom() {
+  const canvas = document.getElementById('pixelCanvas');
+  const pixels = canvas.querySelectorAll('div');
+  pixels.forEach((px, i) => {
+    const c = COLORS[Math.floor(Math.random() * COLORS.length)];
+    pixelData[i] = c;
+    px.style.background = c.hex;
+  });
+  updateCanvasValue();
+}
+
+function collectArtwork() {
+  const total = pixelData.reduce((s,p) => s+(p?p.btc:0), 0);
+  if (!pixelData.some(Boolean)) { alert('Paint something first!'); return; }
+  const fee = total * 0.1;
+  alert(`ARTWORK READY TO INSCRIBE\n\nPixel value: ${total.toFixed(6)} BTC\nProtocol fee (10%): ${fee.toFixed(6)} BTC\nTotal to send: ${(total+fee).toFixed(6)} BTC\n≈ $${Math.round((total+fee)*state.btcPrice).toLocaleString()} USD\n\nIn production: this opens your Bitcoin wallet\nto sign the Ordinals inscription transaction.`);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────────────────────────────────────
+document.getElementById('btcPriceInput').value = state.btcPrice;
+document.getElementById('btcPriceDisplay').textContent = '₿ $' + state.btcPrice.toLocaleString();
+document.getElementById('raisedBTC').value = state.raised;
+
+initPalette();
+initCanvas();
+updateCanvasValue();
+selectPaletteColor(8);
+
+renderDashboard();
+renderTasks();
+renderFundraise();
+renderNotes();
+renderCRM();
+
+// Animate raise bar on load
+setTimeout(() => {
+  const pct = Math.min((state.raised / 8) * 100, 100);
+  const bar = document.getElementById('road-raise-bar');
+  if (bar) bar.style.width = pct + '%';
+}, 300);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AI ADVISOR
+// ─────────────────────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════
+// PROXY URL — Remplace par l'URL de ton Cloudflare Worker
+// Ex: https://drawbitcoin-proxy.
+// ═══════════════════════════════════════════════════════════
+const PROXY_URL = "https://drawbitcoin-proxy.";
+
+async function sendAI() {
+  const input = document.getElementById('aiInput');
+  const msg = input.value.trim();
+  if (!msg) return;
+  input.value = '';
+
+  const msgs = document.getElementById('aiMessages');
+  msgs.innerHTML += `<div style="padding:10px 14px;font-size:12px;line-height:1.6;background:var(--ink);border:1px solid var(--ink);border-right:4px solid var(--gold);color:var(--cream);align-self:flex-end;max-width:85%"><div style="font-size:8px;color:var(--gold);margin-bottom:4px;letter-spacing:3px">YOU</div>${msg}</div>`;
+
+  const typingId = 'typing_' + Date.now();
+  msgs.innerHTML += `<div id="${typingId}" style="padding:10px 14px;font-size:12px;background:#fff;border:1px solid var(--ink);border-left:4px solid var(--gold);max-width:85%"><div style="font-size:8px;color:var(--ink3);margin-bottom:4px;letter-spacing:3px">AI ADVISOR</div><div style="display:inline-flex;gap:4px"><span style="width:6px;height:6px;background:var(--ink);display:inline-block;animation:typingDot 1s infinite;opacity:0"></span><span style="width:6px;height:6px;background:var(--ink);display:inline-block;animation:typingDot 1s 0.2s infinite;opacity:0"></span><span style="width:6px;height:6px;background:var(--ink);display:inline-block;animation:typingDot 1s 0.4s infinite;opacity:0"></span></div></div>`;
+  msgs.scrollTop = msgs.scrollHeight;
+
+  try {
+    // Appel via le proxy Cloudflare Worker — clé API jamais exposée
+    const response = await fetch(PROXY_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-6",
+        max_tokens: 1000,
+        system: `Tu es le conseiller IA de Draw Bitcoin, un protocole d'art monétaire sur Bitcoin.
+Contexte: Draw Bitcoin est une plateforme où chaque pixel peint sur un canvas 40x40 a une valeur fixe en satoshis (or=0.005 BTC, argent=0.0005 BTC, rouge=0.00001 BTC, noir/blanc=gratuit). Les œuvres sont inscrites sur Bitcoin via Ordinals.
+Fondateurs: Antonin Garrigue (Founder) + Bojan Teofilovic (CTO).
+Levée: 8 BTC seed round. Vision 2031: vault de 10,000 BTC.
+Vault Taproot: bc1p0s4jpul3nevglf2qr5ev4cddwhr85au3aharmkrfgs67w90u5vcqtx4krn
+Business model: 10% frais protocole (vault share), marketplace, drops curatés, Digital Slabs physiques.
+Slogan: "NEW MONEY. NEW ART." — "A new type of museum."
+Twitter: @drawbitcoin_org (lancé mars 2026)
+Tu réponds en français par défaut, de façon concise, stratégique et Bitcoin-native. Maximum 200 mots par réponse.`,
+        messages: [{ role: "user", content: msg }]
+      })
+    });
+    const data = await response.json();
+    const reply = data.content?.[0]?.text || "Erreur de connexion. Réessayez.";
+    document.getElementById(typingId).innerHTML = `<div style="font-size:8px;color:var(--ink3);margin-bottom:4px;letter-spacing:3px">AI ADVISOR</div>${reply.replace(/\n/g,'<br>')}`;
+  } catch(e) {
+    document.getElementById(typingId).innerHTML = `<div style="font-size:8px;color:var(--ink3);margin-bottom:4px;letter-spacing:3px">AI ADVISOR</div>⚠️ Proxy non configuré. Mets à jour PROXY_URL avec l'URL de ton Cloudflare Worker.`;
+  }
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function quickPrompt(text) {
+  document.getElementById('aiInput').value = text;
+  sendAI();
+}
+</script>
+</body>
+</html>
